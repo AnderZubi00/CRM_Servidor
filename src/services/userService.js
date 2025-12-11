@@ -1,5 +1,4 @@
-const User = require('../models/User');
-const bcrypt = require('bcryptjs');
+const Usuario = require('../models/Usuario');
 
 /**
  * Crea un nuevo usuario
@@ -8,17 +7,17 @@ const bcrypt = require('bcryptjs');
  */
 const createUser = async (userData) => {
   try {
-    // Verificar si el email ya existe
-    const existingUser = await User.findOne({ where: { email: userData.email } });
+    // Verificar si el correo ya existe
+    const existingUser = await Usuario.findOne({ where: { correo: userData.correo } });
     if (existingUser) {
-      throw new Error('El email ya está registrado');
+      throw new Error('El correo ya está registrado');
     }
 
     // Crear el usuario (la contraseña se encripta automáticamente en el hook)
-    const user = await User.create(userData);
+    const usuario = await Usuario.create(userData);
     
     // No devolver la contraseña
-    const userResponse = user.toJSON();
+    const userResponse = usuario.toJSON();
     delete userResponse.contraseña;
     
     return userResponse;
@@ -33,10 +32,10 @@ const createUser = async (userData) => {
  */
 const getAllUsers = async () => {
   try {
-    const users = await User.findAll({
+    const usuarios = await Usuario.findAll({
       attributes: { exclude: ['contraseña'] }
     });
-    return users;
+    return usuarios;
   } catch (error) {
     throw error;
   }
@@ -49,15 +48,15 @@ const getAllUsers = async () => {
  */
 const getUserById = async (id) => {
   try {
-    const user = await User.findByPk(id, {
+    const usuario = await Usuario.findByPk(id, {
       attributes: { exclude: ['contraseña'] }
     });
     
-    if (!user) {
+    if (!usuario) {
       throw new Error('Usuario no encontrado');
     }
     
-    return user;
+    return usuario;
   } catch (error) {
     throw error;
   }
@@ -71,15 +70,15 @@ const getUserById = async (id) => {
  */
 const updateUser = async (id, userData) => {
   try {
-    const user = await User.findByPk(id);
+    const usuario = await Usuario.findByPk(id);
     
-    if (!user) {
+    if (!usuario) {
       throw new Error('Usuario no encontrado');
     }
 
-    await user.update(userData);
+    await usuario.update(userData);
     
-    const userResponse = user.toJSON();
+    const userResponse = usuario.toJSON();
     delete userResponse.contraseña;
     
     return userResponse;
@@ -95,13 +94,13 @@ const updateUser = async (id, userData) => {
  */
 const deleteUser = async (id) => {
   try {
-    const user = await User.findByPk(id);
+    const usuario = await Usuario.findByPk(id);
     
-    if (!user) {
+    if (!usuario) {
       throw new Error('Usuario no encontrado');
     }
 
-    await user.destroy();
+    await usuario.destroy();
     return true;
   } catch (error) {
     throw error;

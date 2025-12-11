@@ -5,14 +5,14 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 
 /**
  * Genera un token JWT para un usuario
- * @param {Object} user - Objeto usuario con id y rol
+ * @param {Object} usuario - Objeto usuario con id_usuario y id_rol
  * @returns {String} Token JWT
  */
-const generateToken = (user) => {
+const generateToken = (usuario) => {
   const payload = {
-    id: user.id,
-    email: user.email,
-    rol: user.rol
+    id: usuario.id_usuario,
+    correo: usuario.correo,
+    id_rol: usuario.id_rol
   };
 
   return jwt.sign(payload, JWT_SECRET, {

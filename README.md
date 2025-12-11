@@ -115,6 +115,96 @@ CREATE DATABASE nombre_base_datos;
 - El "SQL Shell (psql)" desde el menú de inicio
 - O la ruta completa: `C:\Program Files\PostgreSQL\XX\bin\psql.exe` (donde XX es la versión)
 
+### 2.1. Crear las tablas de la base de datos
+
+Las tablas se crean automáticamente cuando inicias el servidor por primera vez (en modo desarrollo). Sin embargo, si prefieres crearlas manualmente, puedes ejecutar el siguiente script SQL:
+
+```sql
+-- Crear tabla de roles
+CREATE TABLE rol (
+    id_rol SERIAL PRIMARY KEY,
+    nombre_rol VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Crear tabla de empleados
+CREATE TABLE empleado (
+    id_empleado SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL,
+    apellido VARCHAR(50),
+    telefono VARCHAR(20),
+    dni VARCHAR(15)
+);
+
+-- Crear tabla de usuarios
+CREATE TABLE usuario (
+    id_usuario SERIAL PRIMARY KEY,
+    correo VARCHAR(100) UNIQUE NOT NULL,
+    contraseña VARCHAR(255) NOT NULL,
+    id_rol INT NOT NULL REFERENCES rol(id_rol),
+    id_empleado INT REFERENCES empleado(id_empleado)
+);
+
+-- Crear tabla de clientes
+CREATE TABLE cliente (
+    id_cliente SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL,
+    apellido VARCHAR(50),
+    telefono VARCHAR(20),
+    correo VARCHAR(100)
+);
+
+-- Crear tabla de categorías
+CREATE TABLE categoria (
+    id_categoria SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL
+);
+
+-- Crear tabla de proveedores
+CREATE TABLE proveedor (
+    id_proveedor SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL,
+    telefono VARCHAR(20),
+    correo VARCHAR(100)
+);
+
+-- Crear tabla de productos
+CREATE TABLE producto (
+    id_producto SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    precio NUMERIC(10,2) NOT NULL,
+    stock INT NOT NULL,
+    id_categoria INT NOT NULL REFERENCES categoria(id_categoria),
+    id_proveedor INT NOT NULL REFERENCES proveedor(id_proveedor)
+);
+
+-- Crear tabla de pedidos
+CREATE TABLE pedido (
+    id_pedido SERIAL PRIMARY KEY,
+    fecha TIMESTAMP NOT NULL DEFAULT NOW(),
+    id_cliente INT NOT NULL REFERENCES cliente(id_cliente),
+    id_empleado INT REFERENCES empleado(id_empleado)
+);
+
+-- Crear tabla de detalles de pedido
+CREATE TABLE detalle_pedido (
+    id_detalle SERIAL PRIMARY KEY,
+    id_pedido INT NOT NULL REFERENCES pedido(id_pedido) ON DELETE CASCADE,
+    id_producto INT NOT NULL REFERENCES producto(id_producto),
+    cantidad INT NOT NULL,
+    precio_unitario NUMERIC(10,2) NOT NULL
+);
+```
+
+**Insertar roles iniciales:**
+```sql
+INSERT INTO rol (nombre_rol) 
+VALUES 
+  ('administrador'),
+  ('empleado'),
+  ('cliente')
+ON CONFLICT (nombre_rol) DO NOTHING;
+```
+
 ### 3. Instalar dependencias del proyecto
 
 ```bash
@@ -267,40 +357,49 @@ Este error indica problemas con las credenciales. Soluciones:
 ## 📁 Estructura del Proyecto
 
 ```
-backend/
+Servidor/
 │── src/
 │   ├── config/
 │   │   └── database.js          # Configuración de la base de datos
 │   │
 │   ├── models/
-│   │   ├── User.js              # Modelo de Usuario
-│   │   ├── Role.js              # Modelo de Rol
-│   │   └── Producto.js          # Modelo de Producto
+│   │   ├── Rol.js                # Modelo de Rol
+│   │   ├── Empleado.js           # Modelo de Empleado
+│   │   ├── Usuario.js            # Modelo de Usuario
+│   │   ├── Cliente.js            # Modelo de Cliente
+│   │   ├── Categoria.js          # Modelo de Categoría
+│   │   ├── Proveedor.js          # Modelo de Proveedor
+│   │   ├── Producto.js           # Modelo de Producto
+│   │   ├── Pedido.js             # Modelo de Pedido
+│   │   └── DetallePedido.js      # Modelo de Detalle de Pedido
 │   │
 │   ├── controllers/
 │   │   ├── authController.js    # Controlador de autenticación
-│   │   ├── userController.js   # Controlador de usuarios
+│   │   ├── userController.js     # Controlador de usuarios
 │   │   └── productoController.js # Controlador de productos
 │   │
 │   ├── routes/
 │   │   ├── authRoutes.js        # Rutas de autenticación
-│   │   ├── userRoutes.js       # Rutas de usuarios
-│   │   └── productoRoutes.js   # Rutas de productos
+│   │   ├── userRoutes.js        # Rutas de usuarios
+│   │   └── productoRoutes.js    # Rutas de productos
 │   │
 │   ├── services/
-│   │   ├── userService.js      # Lógica de negocio de usuarios
-│   │   └── productoService.js  # Lógica de negocio de productos
+│   │   ├── userService.js       # Lógica de negocio de usuarios
+│   │   └── productoService.js   # Lógica de negocio de productos
 │   │
 │   ├── utils/
-│   │   └── token.js            # Utilidades para JWT
+│   │   └── token.js             # Utilidades para JWT
 │   │
-│   ├── app.js                  # Configuración de Express
-│   └── server.js               # Punto de entrada del servidor
+│   ├── app.js                   # Configuración de Express
+│   └── server.js                # Punto de entrada del servidor
 │
-├── .env                        # Variables de entorno (no subir a git)
-├── .env.example               # Ejemplo de variables de entorno
-├── package.json               # Dependencias del proyecto
-└── README.md                  # Este archivo
+├── scripts/
+│   └── check-db.js              # Script para verificar conexión a BD
+│
+├── .env                         # Variables de entorno (no subir a git)
+├── .env.example                # Ejemplo de variables de entorno
+├── package.json                 # Dependencias del proyecto
+└── README.md                    # Este archivo
 ```
 
 ## 🔌 Endpoints de la API
@@ -312,6 +411,7 @@ backend/
 ### Usuarios
 - `GET /api/users` - Obtener todos los usuarios (requiere autenticación)
 - `GET /api/users/:id` - Obtener un usuario por ID (requiere autenticación)
+- `POST /api/users/register` - Registrar nuevo usuario (público, sin autenticación)
 - `POST /api/users/create` - Crear un nuevo usuario (requiere autenticación)
 - `PUT /api/users/:id` - Actualizar un usuario (requiere autenticación)
 - `DELETE /api/users/:id` - Eliminar un usuario (requiere autenticación)
@@ -330,7 +430,7 @@ La mayoría de los endpoints requieren autenticación mediante JWT. Para autenti
 1. Realiza un `POST` a `/api/auth/login` con:
    ```json
    {
-     "email": "usuario@example.com",
+     "correo": "usuario@example.com",
      "contraseña": "tu_contraseña"
    }
    ```
@@ -342,33 +442,108 @@ La mayoría de los endpoints requieren autenticación mediante JWT. Para autenti
    Authorization: Bearer <tu_token>
    ```
 
-## 🗄️ Modelos de Datos
+## 🗄️ Estructura de la Base de Datos
 
-### User (Usuario)
-- `id`: Integer (PK, Auto-increment)
-- `nombre`: String
-- `email`: String (único)
-- `contraseña`: String (encriptada)
-- `rol`: Integer (FK a Role)
-- `createdAt`: Timestamp
-- `updatedAt`: Timestamp
+### Tabla: `rol`
+- `id_rol`: Integer (PK, SERIAL, Auto-increment)
+- `nombre_rol`: VARCHAR(50) (NOT NULL, UNIQUE)
+  - Valores posibles: 'administrador', 'empleado', 'cliente'
 
-### Role (Rol)
-- `id`: Integer (PK, Auto-increment)
-- `nombre`: String (único: 'administrador', 'empleado', 'cliente')
-- `descripcion`: Text
-- `createdAt`: Timestamp
-- `updatedAt`: Timestamp
+### Tabla: `empleado`
+- `id_empleado`: Integer (PK, SERIAL, Auto-increment)
+- `nombre`: VARCHAR(50) (NOT NULL)
+- `apellido`: VARCHAR(50) (NULL)
+- `telefono`: VARCHAR(20) (NULL)
+- `dni`: VARCHAR(15) (NULL)
 
-### Producto
-- `id`: Integer (PK, Auto-increment)
-- `nombre`: String
-- `descripcion`: Text
-- `precio`: Decimal(10,2)
-- `stock`: Integer
-- `imagen`: String
-- `createdAt`: Timestamp
-- `updatedAt`: Timestamp
+### Tabla: `usuario`
+- `id_usuario`: Integer (PK, SERIAL, Auto-increment)
+- `correo`: VARCHAR(100) (UNIQUE, NOT NULL)
+- `contraseña`: VARCHAR(255) (NOT NULL, encriptada con bcrypt)
+- `id_rol`: Integer (NOT NULL, FK → `rol.id_rol`)
+- `id_empleado`: Integer (NULL, FK → `empleado.id_empleado`)
+
+**Relaciones:**
+- Un usuario pertenece a un rol (obligatorio)
+- Un usuario puede estar asociado a un empleado (opcional)
+
+### Tabla: `cliente`
+- `id_cliente`: Integer (PK, SERIAL, Auto-increment)
+- `nombre`: VARCHAR(50) (NOT NULL)
+- `apellido`: VARCHAR(50) (NULL)
+- `telefono`: VARCHAR(20) (NULL)
+- `correo`: VARCHAR(100) (NULL)
+
+### Tabla: `categoria`
+- `id_categoria`: Integer (PK, SERIAL, Auto-increment)
+- `nombre`: VARCHAR(50) (NOT NULL)
+
+### Tabla: `proveedor`
+- `id_proveedor`: Integer (PK, SERIAL, Auto-increment)
+- `nombre`: VARCHAR(50) (NOT NULL)
+- `telefono`: VARCHAR(20) (NULL)
+- `correo`: VARCHAR(100) (NULL)
+
+### Tabla: `producto`
+- `id_producto`: Integer (PK, SERIAL, Auto-increment)
+- `nombre`: VARCHAR(100) (NOT NULL)
+- `precio`: NUMERIC(10,2) (NOT NULL)
+- `stock`: Integer (NOT NULL)
+- `id_categoria`: Integer (NOT NULL, FK → `categoria.id_categoria`)
+- `id_proveedor`: Integer (NOT NULL, FK → `proveedor.id_proveedor`)
+
+**Relaciones:**
+- Un producto pertenece a una categoría (obligatorio)
+- Un producto pertenece a un proveedor (obligatorio)
+
+### Tabla: `pedido`
+- `id_pedido`: Integer (PK, SERIAL, Auto-increment)
+- `fecha`: TIMESTAMP (NOT NULL, DEFAULT NOW())
+- `id_cliente`: Integer (NOT NULL, FK → `cliente.id_cliente`)
+- `id_empleado`: Integer (NULL, FK → `empleado.id_empleado`)
+
+**Relaciones:**
+- Un pedido pertenece a un cliente (obligatorio)
+- Un pedido puede estar asociado a un empleado (opcional)
+
+### Tabla: `detalle_pedido`
+- `id_detalle`: Integer (PK, SERIAL, Auto-increment)
+- `id_pedido`: Integer (NOT NULL, FK → `pedido.id_pedido`, ON DELETE CASCADE)
+- `id_producto`: Integer (NOT NULL, FK → `producto.id_producto`)
+- `cantidad`: Integer (NOT NULL)
+- `precio_unitario`: NUMERIC(10,2) (NOT NULL)
+
+**Relaciones:**
+- Un detalle pertenece a un pedido (obligatorio, se elimina si se elimina el pedido)
+- Un detalle referencia a un producto (obligatorio)
+
+## 📊 Diagrama de Relaciones
+
+```
+rol (1) ──< (N) usuario
+empleado (1) ──< (N) usuario
+empleado (1) ──< (N) pedido
+cliente (1) ──< (N) pedido
+categoria (1) ──< (N) producto
+proveedor (1) ──< (N) producto
+pedido (1) ──< (N) detalle_pedido
+producto (1) ──< (N) detalle_pedido
+```
+
+## 🔑 Datos Iniciales
+
+Después de crear las tablas, es necesario insertar los roles iniciales:
+
+```sql
+INSERT INTO rol (nombre_rol) 
+VALUES 
+  ('administrador'),
+  ('empleado'),
+  ('cliente')
+ON CONFLICT (nombre_rol) DO NOTHING;
+```
+
+**Nota:** Los roles se insertan automáticamente si ejecutas el script SQL proporcionado en la sección de instalación.
 
 ## 🛠️ Tecnologías Utilizadas
 
@@ -382,9 +557,13 @@ La mayoría de los endpoints requieren autenticación mediante JWT. Para autenti
 
 ## 📝 Notas
 
-- Las contraseñas se encriptan automáticamente antes de guardarse en la base de datos.
-- En desarrollo, las tablas se crean automáticamente. En producción, se recomienda usar migraciones.
-- El archivo `.env` no debe subirse al repositorio. Usa `.env.example` como referencia.
+- **Contraseñas**: Se encriptan automáticamente con bcrypt antes de guardarse en la base de datos.
+- **Creación de tablas**: 
+  - En desarrollo, las tablas se crean automáticamente al iniciar el servidor (si no existen).
+  - En producción, se recomienda usar migraciones de Sequelize o scripts SQL.
+- **Variables de entorno**: El archivo `.env` no debe subirse al repositorio. Usa `.env.example` como referencia.
+- **Roles**: Los roles iniciales deben insertarse manualmente o mediante script SQL.
+- **Relaciones**: Todas las foreign keys están configuradas con las restricciones apropiadas (CASCADE donde corresponde).
 
 ## 🤝 Contribución
 
