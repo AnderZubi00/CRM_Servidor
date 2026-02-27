@@ -18,6 +18,9 @@ router.get('/:id', userController.getUserById);
 // POST /api/users/create - Crear un nuevo usuario (requiere autenticación)
 router.post('/create', userController.createUser);
 
+// POST /api/users/create - Crear un nuevo empleado (requiere autenticación)
+router.post('/create-empleado', userController.createEmpleadoUser);
+
 // PUT /api/users/:id - Actualizar un usuario
 router.put('/:id', userController.updateUser);
 

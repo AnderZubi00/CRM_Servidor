@@ -110,11 +110,69 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const createEmpleadoUser = async (req, res) => {
+  const { correo, contraseña, empleado } = req.body;
+
+  if (!correo || !contraseña) {
+    return res.status(400).json({ error: "Faltan correo o contraseña" });
+  }
+  if (!empleado?.nombre) {
+    return res.status(400).json({ error: "Falta empleado.nombre" });
+  }
+
+  try {
+    const { sequelize } = require("../config/database");
+    const Usuario = require("../models/Usuario");
+    const Empleado = require("../models/Empleado");
+
+    const { usuario, empleadoCreado } = await sequelize.transaction(async (t) => {
+      // 1) Crear empleado
+      const empleadoCreado = await Empleado.create(
+        {
+          nombre: empleado.nombre,
+          apellido: empleado.apellido ?? null,
+          telefono: empleado.telefono ?? null,
+          dni: empleado.dni ?? null,
+        },
+        { transaction: t }
+      );
+
+      // 2) Crear usuario asociado (rol empleado = 2)
+      // NOTA: la contraseña se hashea sola por hooks del modelo Usuario
+      const usuario = await Usuario.create(
+        {
+          correo,
+          contraseña,
+          id_rol: 2,
+          id_empleado: empleadoCreado.id_empleado,
+        },
+        { transaction: t }
+      );
+
+      return { usuario, empleadoCreado };
+    });
+
+    return res.status(201).json({
+      empleado: empleadoCreado,
+      usuario,
+    });
+  } catch (error) {
+    console.error("❌ Error create-empleado:", error);
+    return res.status(500).json({
+      error: "Error al crear empleado y usuario",
+      details: error?.message || null,
+      sequelize: Array.isArray(error?.errors)
+        ? error.errors.map((e) => ({ message: e.message, path: e.path, value: e.value }))
+        : null,
+    });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
   createUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  createEmpleadoUser
 };
-

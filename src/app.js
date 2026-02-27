@@ -6,6 +6,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const productoRoutes = require('./routes/productoRoutes');
+const empleadoRoutes = require('./routes/empleadoRoutes');
 
 // Crear aplicación Express
 const app = express();
@@ -15,10 +16,14 @@ app.use(cors()); // Permitir peticiones desde el frontend
 app.use(express.json()); // Parsear JSON en las peticiones
 app.use(express.urlencoded({ extended: true })); // Parsear datos de formularios
 
+app.get('/ping', (req, res) => {
+  res.status(200).send('pong');
+});
 // Rutas de la API
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/productos', productoRoutes);
+app.use('/api/empleados', empleadoRoutes);
 
 // Ruta de prueba
 app.get('/', (req, res) => {

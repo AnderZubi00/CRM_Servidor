@@ -29,7 +29,7 @@ const Empleado = sequelize.define('Empleado', {
   }
 }, {
   tableName: 'empleado',
-  timestamps: false
+  timestamps: false,
 });
 
 module.exports = Empleado;

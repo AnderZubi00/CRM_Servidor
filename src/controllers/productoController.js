@@ -52,9 +52,20 @@ const createProducto = async (req, res) => {
       producto
     });
   } catch (error) {
-    console.error('Error en createProducto:', error);
-    res.status(500).json({
-      error: 'Error al crear el producto'
+    console.error("❌ Error creando producto:", error);
+
+    return res.status(500).json({
+      error: "Error al crear el producto",
+      details: error?.message || null,
+      sequelize: Array.isArray(error?.errors)
+        ? error.errors.map((e) => ({
+          message: e.message,
+          path: e.path,
+          value: e.value,
+          validatorKey: e.validatorKey || null,
+          type: e.type || null,
+        }))
+        : null,
     });
   }
 };

@@ -21,7 +21,7 @@ const createProducto = async (productoData) => {
 const getAllProductos = async () => {
   try {
     const productos = await Producto.findAll({
-      order: [['createdAt', 'DESC']]
+      order: [['nombre', 'DESC']]
     });
     return productos;
   } catch (error) {
