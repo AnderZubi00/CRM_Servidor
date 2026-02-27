@@ -29,6 +29,11 @@ const Producto = sequelize.define('Producto', {
       min: 0
     }
   },
+  descripcion: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    field: 'descripcion'
+  },
   id_categoria: {
     type: DataTypes.INTEGER,
     allowNull: false,
