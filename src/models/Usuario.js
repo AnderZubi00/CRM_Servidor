@@ -33,6 +33,18 @@ const Usuario = sequelize.define('Usuario', {
     type: DataTypes.INTEGER,
     allowNull: true,
     field: 'id_empleado'
+  },
+  nombre: {
+    type: DataTypes.STRING(80),
+    allowNull: true, // Puede ser null inicialmente si no se llena
+  },
+  apellido: {
+    type: DataTypes.STRING(120),
+    allowNull: true, // Igual, no obligatorio
+  },
+  telefono: {
+    type: DataTypes.STRING(20),
+    allowNull: true, // No obligatorio
   }
 }, {
   tableName: 'usuario',
