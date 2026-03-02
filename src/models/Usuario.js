@@ -36,15 +36,15 @@ const Usuario = sequelize.define('Usuario', {
   },
   nombre: {
     type: DataTypes.STRING(80),
-    allowNull: true, // Puede ser null inicialmente si no se llena
+    allowNull: true, // Cambié esto a 'false' si deseas que sea obligatorio
   },
   apellido: {
     type: DataTypes.STRING(120),
-    allowNull: true, // Igual, no obligatorio
+    allowNull: true, // Cambié esto a 'false' si deseas que sea obligatorio
   },
   telefono: {
     type: DataTypes.STRING(20),
-    allowNull: true, // No obligatorio
+    allowNull: true, // Lo dejo como 'true' porque parece opcional
   }
 }, {
   tableName: 'usuario',
@@ -69,4 +69,3 @@ Usuario.prototype.comparePassword = async function(password) {
 };
 
 module.exports = Usuario;
-
