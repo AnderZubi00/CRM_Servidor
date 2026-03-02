@@ -1,20 +1,56 @@
 const Usuario = require('../models/Usuario');
+const Empleado = require('../models/Empleado');
 
 /**
  * Crea un nuevo usuario
  * @param {Object} userData - Datos del usuario
  * @returns {Promise<Object>} Usuario creado
  */
+/**
+ * Asigna el id_rol según el correo del usuario
+ * admin@gmail.com → administrador (1)
+ * empleado@gmail.com → empleado (2)
+ * resto → cliente (3)
+ */
+const asignarRolPorCorreo = (correo) => {
+  const correoLower = (correo || '').toLowerCase().trim();
+  if (correoLower === 'admin@gmail.com') return 1;
+  if (correoLower === 'empleado@gmail.com') return 2;
+  return 3; // cliente por defecto
+};
+
 const createUser = async (userData) => {
   try {
+    if (!userData?.correo?.trim()) {
+      throw new Error('El correo es obligatorio');
+    }
+    if (!userData?.contraseña) {
+      throw new Error('La contraseña es obligatoria');
+    }
+    if (userData.contraseña.length < 6) {
+      throw new Error('La contraseña debe tener al menos 6 caracteres');
+    }
+
     // Verificar si el correo ya existe
-    const existingUser = await Usuario.findOne({ where: { correo: userData.correo } });
+    const existingUser = await Usuario.findOne({ where: { correo: userData.correo.trim() } });
     if (existingUser) {
       throw new Error('El correo ya está registrado');
     }
 
-    // Crear el usuario (la contraseña se encripta automáticamente en el hook)
-    const usuario = await Usuario.create(userData);
+    // Asignar rol según correo: admin@gmail.com → admin, empleado@gmail.com → empleado, resto → cliente
+    // Forzar número para evitar que llegue null/undefined desde el body
+    const id_rol = Number(asignarRolPorCorreo(userData.correo)) || 3;
+    const datosUsuario = {
+      correo: userData.correo.trim(),
+      contraseña: userData.contraseña,
+      id_rol
+    };
+    if (userData.id_empleado != null && userData.id_empleado !== '') {
+      datosUsuario.id_empleado = Number(userData.id_empleado);
+    }
+
+    // Crear el usuario (solo estos campos; no pasar userData para evitar id_rol null del body)
+    const usuario = await Usuario.create(datosUsuario);
     
     // No devolver la contraseña
     const userResponse = usuario.toJSON();
@@ -24,6 +60,41 @@ const createUser = async (userData) => {
   } catch (error) {
     throw error;
   }
+};
+
+/**
+ * Crea un empleado en la tabla empleado y un usuario con rol empleado (id_rol=2) vinculado.
+ * @param {Object} data - { correo, contraseña, empleado: { nombre, apellido?, telefono?, dni? } }
+ * @returns {Promise<Object>} { empleado, user }
+ */
+const createUserAsEmpleado = async (data) => {
+  const { correo, contraseña, empleado: empleadoData } = data || {};
+  if (!correo?.trim()) throw new Error('El correo es obligatorio');
+  if (!contraseña) throw new Error('La contraseña es obligatoria');
+  if (contraseña.length < 6) throw new Error('La contraseña debe tener al menos 6 caracteres');
+  const nombre = empleadoData?.nombre?.trim();
+  if (!nombre) throw new Error('El nombre del empleado es obligatorio');
+
+  const existingUser = await Usuario.findOne({ where: { correo: correo.trim() } });
+  if (existingUser) throw new Error('El correo ya está registrado');
+
+  const empleado = await Empleado.create({
+    nombre,
+    apellido: empleadoData?.apellido?.trim() || null,
+    telefono: empleadoData?.telefono?.trim() || null,
+    dni: empleadoData?.dni?.trim() || null,
+  });
+
+  const usuario = await Usuario.create({
+    correo: correo.trim(),
+    contraseña,
+    id_rol: 2,
+    id_empleado: empleado.id_empleado,
+  });
+
+  const userResponse = usuario.toJSON();
+  delete userResponse.contraseña;
+  return { empleado, user: userResponse };
 };
 
 /**
@@ -109,6 +180,7 @@ const deleteUser = async (id) => {
 
 module.exports = {
   createUser,
+  createUserAsEmpleado,
   getAllUsers,
   getUserById,
   updateUser,

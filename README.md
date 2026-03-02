@@ -423,6 +423,18 @@ Servidor/
 - `PUT /api/productos/:id` - Actualizar un producto (requiere autenticación)
 - `DELETE /api/productos/:id` - Eliminar un producto (requiere autenticación)
 
+### Categorías (flujo admin: crear antes que productos)
+- `GET /api/categorias` - Listar categorías (requiere autenticación)
+- `POST /api/categorias` - Crear categoría. Body: `{ "nombre": "Ej: Informática" }` (requiere autenticación)
+- `PUT /api/categorias/:id` - Actualizar categoría (requiere autenticación)
+- `DELETE /api/categorias/:id` - Eliminar categoría (devuelve 409 si hay productos asociados)
+
+### Proveedores (flujo admin: crear antes que productos)
+- `GET /api/proveedores` - Listar proveedores (requiere autenticación)
+- `POST /api/proveedores` - Crear proveedor. Body: `{ "nombre": "...", "telefono": "...", "correo": "..." }` (telefono y correo opcionales)
+- `PUT /api/proveedores/:id` - Actualizar proveedor (requiere autenticación)
+- `DELETE /api/proveedores/:id` - Eliminar proveedor (devuelve 409 si hay productos asociados)
+
 ## 🔐 Autenticación
 
 La mayoría de los endpoints requieren autenticación mediante JWT. Para autenticarte:

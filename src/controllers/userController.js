@@ -45,7 +45,12 @@ const getUserById = async (req, res) => {
  */
 const createUser = async (req, res) => {
   try {
-    const userData = req.body;
+    // Solo correo y contraseña; el rol lo asigna el servidor por correo
+    const { correo, contraseña, id_empleado } = req.body;
+    const userData = { correo, contraseña };
+    if (id_empleado != null && id_empleado !== '') {
+      userData.id_empleado = id_empleado;
+    }
     const user = await userService.createUser(userData);
     res.status(201).json({
       message: 'Usuario creado exitosamente',
@@ -53,11 +58,50 @@ const createUser = async (req, res) => {
     });
   } catch (error) {
     console.error('Error en createUser:', error);
-    if (error.message === 'El email ya está registrado') {
+    const mensajes400 = [
+      'El correo ya está registrado',
+      'El correo es obligatorio',
+      'La contraseña es obligatoria',
+      'La contraseña debe tener al menos 6 caracteres'
+    ];
+    if (mensajes400.includes(error.message)) {
+      return res.status(400).json({ error: error.message });
+    }
+    const mensaje = process.env.NODE_ENV === 'development' ? error.message : 'Error al crear el usuario';
+    res.status(500).json({
+      error: mensaje
+    });
+  }
+};
+
+/**
+ * Controlador para crear usuario con rol empleado y su ficha de empleado
+ * @param {Object} req - Request object (body: correo, contraseña, empleado: { nombre, apellido?, telefono?, dni? })
+ * @param {Object} res - Response object
+ */
+const createUserAsEmpleado = async (req, res) => {
+  try {
+    const { correo, contraseña, empleado } = req.body;
+    const result = await userService.createUserAsEmpleado({ correo, contraseña, empleado });
+    res.status(201).json({
+      message: 'Empleado y usuario creados correctamente',
+      empleado: result.empleado,
+      user: result.user,
+    });
+  } catch (error) {
+    console.error('Error en createUserAsEmpleado:', error);
+    const mensajes400 = [
+      'El correo ya está registrado',
+      'El correo es obligatorio',
+      'La contraseña es obligatoria',
+      'La contraseña debe tener al menos 6 caracteres',
+      'El nombre del empleado es obligatorio',
+    ];
+    if (mensajes400.includes(error.message)) {
       return res.status(400).json({ error: error.message });
     }
     res.status(500).json({
-      error: 'Error al crear el usuario'
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Error al crear el empleado',
     });
   }
 };
@@ -172,6 +216,7 @@ module.exports = {
   getAllUsers,
   getUserById,
   createUser,
+  createUserAsEmpleado,
   updateUser,
   deleteUser,
   createEmpleadoUser

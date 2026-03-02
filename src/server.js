@@ -99,6 +99,7 @@ const startServer = async () => {
     app.listen(PORT, () => {
       console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
       console.log(`📝 Entorno: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`📷 Subida de imágenes: POST http://localhost:${PORT}/api/productos/upload-imagen`);
     });
   } catch (error) {
     console.error('❌ Error al iniciar el servidor:', error);

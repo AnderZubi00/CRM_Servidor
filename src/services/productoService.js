@@ -2,12 +2,27 @@ const Producto = require('../models/Producto');
 
 /**
  * Crea un nuevo producto
- * @param {Object} productoData - Datos del producto
+ * @param {Object} productoData - Datos del producto (nombre, precio, id_categoria, id_proveedor, stock opcional)
  * @returns {Promise<Object>} Producto creado
  */
 const createProducto = async (productoData) => {
   try {
-    const producto = await Producto.create(productoData);
+    const payload = {
+      nombre: (productoData.nombre || '').trim(),
+      precio: Number(productoData.precio),
+      id_categoria: Number(productoData.id_categoria),
+      id_proveedor: Number(productoData.id_proveedor),
+      stock: productoData.stock != null && productoData.stock !== '' ? Number(productoData.stock) : 0,
+      imagen_url: productoData.imagen_url || null,
+    };
+    if (payload.nombre === '' || !Number.isFinite(payload.precio) || payload.precio < 0) {
+      throw new Error('Nombre y precio son obligatorios; precio debe ser >= 0.');
+    }
+    if (!Number.isFinite(payload.id_categoria) || !Number.isFinite(payload.id_proveedor)) {
+      throw new Error('Debe indicar categoría y proveedor.');
+    }
+    if (payload.stock < 0) throw new Error('El stock no puede ser negativo.');
+    const producto = await Producto.create(payload);
     return producto;
   } catch (error) {
     throw error;
@@ -21,7 +36,11 @@ const createProducto = async (productoData) => {
 const getAllProductos = async () => {
   try {
     const productos = await Producto.findAll({
+<<<<<<< HEAD
       order: [['nombre', 'DESC']]
+=======
+      order: [['id_producto', 'DESC']],
+>>>>>>> 6900e28 ([TFG-5]Añadir funcionalidad de creacion de productos)
     });
     return productos;
   } catch (error) {
@@ -57,12 +76,22 @@ const getProductoById = async (id) => {
 const updateProducto = async (id, productoData) => {
   try {
     const producto = await Producto.findByPk(id);
-    
     if (!producto) {
       throw new Error('Producto no encontrado');
     }
-
-    await producto.update(productoData);
+    const payload = {
+      nombre: (productoData.nombre || '').trim(),
+      precio: Number(productoData.precio),
+      id_categoria: Number(productoData.id_categoria),
+      id_proveedor: Number(productoData.id_proveedor),
+      stock: productoData.stock != null && productoData.stock !== '' ? Number(productoData.stock) : 0,
+      imagen_url: productoData.imagen_url || null,
+    };
+    if (payload.nombre === '' || !Number.isFinite(payload.precio) || payload.precio < 0) {
+      throw new Error('Nombre y precio son obligatorios; precio debe ser >= 0.');
+    }
+    if (payload.stock < 0) throw new Error('El stock no puede ser negativo.');
+    await producto.update(payload);
     return producto;
   } catch (error) {
     throw error;

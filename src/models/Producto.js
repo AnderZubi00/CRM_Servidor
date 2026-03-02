@@ -29,10 +29,17 @@ const Producto = sequelize.define('Producto', {
       min: 0
     }
   },
+<<<<<<< HEAD
   descripcion: {
     type: DataTypes.TEXT,
     allowNull: true,
     field: 'descripcion'
+=======
+  imagen_url: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    field: 'imagen_url'
+>>>>>>> 6900e28 ([TFG-5]Añadir funcionalidad de creacion de productos)
   },
   id_categoria: {
     type: DataTypes.INTEGER,

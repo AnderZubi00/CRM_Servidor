@@ -18,8 +18,13 @@ router.get('/:id', userController.getUserById);
 // POST /api/users/create - Crear un nuevo usuario (requiere autenticación)
 router.post('/create', userController.createUser);
 
+<<<<<<< HEAD
 // POST /api/users/create - Crear un nuevo empleado (requiere autenticación)
 router.post('/create-empleado', userController.createEmpleadoUser);
+=======
+// POST /api/users/create-empleado - Crear empleado + usuario con rol empleado
+router.post('/create-empleado', userController.createUserAsEmpleado);
+>>>>>>> 6900e28 ([TFG-5]Añadir funcionalidad de creacion de productos)
 
 // PUT /api/users/:id - Actualizar un usuario
 router.put('/:id', userController.updateUser);

@@ -56,9 +56,32 @@ const authenticateToken = (req, res, next) => {
   }
 };
 
+/**
+ * Acepta token en header Authorization O en body.token (para multipart/form-data)
+ */
+const authenticateTokenHeaderOrBody = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const tokenFromHeader = authHeader && authHeader.split(' ')[1];
+  const tokenFromBody = req.body?.token;
+  const token = tokenFromHeader || tokenFromBody;
+
+  if (!token) {
+    return res.status(401).json({ error: 'Token de acceso requerido' });
+  }
+
+  try {
+    const decoded = verifyToken(token);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(403).json({ error: 'Token inválido o expirado' });
+  }
+};
+
 module.exports = {
   generateToken,
   verifyToken,
-  authenticateToken
+  authenticateToken,
+  authenticateTokenHeaderOrBody
 };
 
