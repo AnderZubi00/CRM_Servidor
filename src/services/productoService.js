@@ -36,11 +36,7 @@ const createProducto = async (productoData) => {
 const getAllProductos = async () => {
   try {
     const productos = await Producto.findAll({
-<<<<<<< HEAD
-      order: [['nombre', 'DESC']]
-=======
       order: [['id_producto', 'DESC']],
->>>>>>> 6900e28 ([TFG-5]Añadir funcionalidad de creacion de productos)
     });
     return productos;
   } catch (error) {
