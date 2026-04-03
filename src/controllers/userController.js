@@ -46,8 +46,8 @@ const getUserById = async (req, res) => {
 const createUser = async (req, res) => {
   try {
     // Solo correo y contraseña; el rol lo asigna el servidor por correo
-    const { correo, contraseña, id_empleado } = req.body;
-    const userData = { correo, contraseña };
+    const { correo, contraseña, id_empleado, nombre, apellido, telefono } = req.body;
+    const userData = { correo, contraseña, nombre, apellido, telefono };
     if (id_empleado != null && id_empleado !== '') {
       userData.id_empleado = id_empleado;
     }
@@ -62,7 +62,10 @@ const createUser = async (req, res) => {
       'El correo ya está registrado',
       'El correo es obligatorio',
       'La contraseña es obligatoria',
-      'La contraseña debe tener al menos 6 caracteres'
+      'La contraseña debe tener al menos 6 caracteres',
+      'El nombre es obligatorio',
+      'El apellido es obligatorio',
+      'El teléfono es obligatorio',
     ];
     if (mensajes400.includes(error.message)) {
       return res.status(400).json({ error: error.message });

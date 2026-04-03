@@ -30,6 +30,15 @@ const createUser = async (userData) => {
     if (userData.contraseña.length < 6) {
       throw new Error('La contraseña debe tener al menos 6 caracteres');
     }
+    if (!userData?.nombre?.trim()) {
+      throw new Error('El nombre es obligatorio');
+    }
+    if (!userData?.apellido?.trim()) {
+      throw new Error('El apellido es obligatorio');
+    }
+    if (!userData?.telefono?.trim()) {
+      throw new Error('El teléfono es obligatorio');
+    }
 
     // Verificar si el correo ya existe
     const existingUser = await Usuario.findOne({ where: { correo: userData.correo.trim() } });
@@ -43,7 +52,10 @@ const createUser = async (userData) => {
     const datosUsuario = {
       correo: userData.correo.trim(),
       contraseña: userData.contraseña,
-      id_rol
+      id_rol,
+      nombre: userData.nombre.trim(),
+      apellido: userData.apellido.trim(),
+      telefono: userData.telefono.trim(),
     };
     if (userData.id_empleado != null && userData.id_empleado !== '') {
       datosUsuario.id_empleado = Number(userData.id_empleado);

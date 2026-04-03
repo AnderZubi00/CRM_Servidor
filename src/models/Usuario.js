@@ -36,15 +36,15 @@ const Usuario = sequelize.define('Usuario', {
   },
   nombre: {
     type: DataTypes.STRING(80),
-    allowNull: true, // Cambié esto a 'false' si deseas que sea obligatorio
+    allowNull: true,
   },
   apellido: {
     type: DataTypes.STRING(120),
-    allowNull: true, // Cambié esto a 'false' si deseas que sea obligatorio
+    allowNull: true,
   },
   telefono: {
     type: DataTypes.STRING(20),
-    allowNull: true, // Lo dejo como 'true' porque parece opcional
+    allowNull: true,
   }
 }, {
   tableName: 'usuario',

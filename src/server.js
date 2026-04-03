@@ -1,5 +1,6 @@
 const app = require('./app');
-const { connectDB } = require('./config/database');
+const { connectDB, sequelize } = require('./config/database');
+const { DataTypes } = require('sequelize');
 
 // Importar modelos
 const Rol = require('./models/Rol');
@@ -14,12 +15,32 @@ const DetallePedido = require('./models/DetallePedido');
 
 const PORT = process.env.PORT || 4000;
 
+const ensureUsuarioColumns = async () => {
+  const qi = sequelize.getQueryInterface();
+  const desc = await qi.describeTable('usuario');
+
+  const addIfMissing = async (columnName, attributes) => {
+    if (desc[columnName]) return;
+    await qi.addColumn('usuario', columnName, attributes);
+    console.log(`✅ Columna agregada: usuario.${columnName}`);
+  };
+
+  await addIfMissing('nombre', { type: DataTypes.STRING(80), allowNull: true });
+  await addIfMissing('apellido', { type: DataTypes.STRING(120), allowNull: true });
+  await addIfMissing('telefono', { type: DataTypes.STRING(20), allowNull: true });
+};
+
 // Función para inicializar el servidor
 const startServer = async () => {
   try {
     // Conectar a la base de datos
     await connectDB();
     console.log('✅ Conexión a la base de datos establecida.');
+
+    // Asegurar columnas faltantes (solo desarrollo)
+    if (process.env.NODE_ENV !== 'production') {
+      await ensureUsuarioColumns();
+    }
 
     // Establecer relaciones
     // Usuario -> Rol
