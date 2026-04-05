@@ -1,6 +1,7 @@
 const Pedido = require('../models/Pedido');
 const DetallePedido = require('../models/DetallePedido');
 const Producto = require('../models/Producto');
+const Cliente = require('../models/Cliente');
 const { sequelize } = require('../config/database');
 
 /**
@@ -110,4 +111,48 @@ const getPedidosByCliente = async (idCliente) => {
   return result;
 };
 
-module.exports = { createPedido, getPedidosByCliente };
+/**
+ * Obtiene todos los pedidos con detalles e info de cliente (para admin/empleado).
+ *
+ * @returns {Promise<Object[]>}
+ */
+const getAllPedidos = async () => {
+  const pedidos = await Pedido.findAll({ order: [['fecha', 'DESC']] });
+
+  const result = [];
+
+  for (const pedido of pedidos) {
+    const detalles = await DetallePedido.findAll({
+      where: { id_pedido: pedido.id_pedido },
+    });
+
+    let total = 0;
+    const detallesConNombre = [];
+
+    for (const d of detalles) {
+      const prod = await Producto.findByPk(d.id_producto);
+      total += Number(d.precio_unitario) * Number(d.cantidad);
+      detallesConNombre.push({
+        ...d.toJSON(),
+        nombre_producto: prod ? prod.nombre : 'Producto eliminado',
+        imagen_url: prod ? prod.imagen_url : null,
+      });
+    }
+
+    const cliente = await Cliente.findByPk(pedido.id_cliente);
+
+    result.push({
+      ...pedido.toJSON(),
+      correo_cliente: cliente ? cliente.correo : null,
+      nombre_cliente: cliente
+        ? `${cliente.nombre} ${cliente.apellido || ''}`.trim()
+        : null,
+      total,
+      detalles: detallesConNombre,
+    });
+  }
+
+  return result;
+};
+
+module.exports = { createPedido, getPedidosByCliente, getAllPedidos };

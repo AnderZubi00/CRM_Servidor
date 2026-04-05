@@ -75,4 +75,22 @@ const getMisPedidos = async (req, res) => {
   }
 };
 
-module.exports = { createPedido, getMisPedidos };
+/**
+ * GET /api/pedidos/todos
+ * Solo accesible para admin (rol=1) y empleado (rol=2).
+ */
+const getAllPedidos = async (req, res) => {
+  try {
+    const rolUsuario = Number(req.user?.id_rol);
+    if (rolUsuario !== 1 && rolUsuario !== 2) {
+      return res.status(403).json({ error: 'Acceso denegado.' });
+    }
+    const pedidos = await pedidoService.getAllPedidos();
+    res.json(pedidos);
+  } catch (error) {
+    console.error('Error en getAllPedidos:', error);
+    res.status(500).json({ error: 'Error al obtener los pedidos.' });
+  }
+};
+
+module.exports = { createPedido, getMisPedidos, getAllPedidos };
