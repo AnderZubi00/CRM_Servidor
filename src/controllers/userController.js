@@ -118,6 +118,12 @@ const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
     const userData = req.body;
+
+    // Solo el admin (id_rol=1) puede cambiar roles
+    if (userData.id_rol !== undefined && Number(req.user?.id_rol) !== 1) {
+      return res.status(403).json({ error: 'Solo los administradores pueden cambiar roles.' });
+    }
+
     const user = await userService.updateUser(id, userData);
     res.json({
       message: 'Usuario actualizado exitosamente',

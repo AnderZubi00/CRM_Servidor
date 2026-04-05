@@ -19,6 +19,7 @@ const productoRoutes = require('./routes/productoRoutes');
 const categoriaRoutes = require('./routes/categoriaRoutes');
 const proveedorRoutes = require('./routes/proveedorRoutes');
 const empleadoRoutes = require('./routes/empleadoRoutes');
+const pedidoRoutes = require('./routes/pedidoRoutes');
 const { authenticateTokenHeaderOrBody } = require('./utils/token');
 
 // Multer para subir imágenes de productos
@@ -92,6 +93,7 @@ app.use('/api/productos', productoRoutes);
 app.use('/api/categorias', categoriaRoutes);
 app.use('/api/proveedores', proveedorRoutes);
 app.use('/api/empleados', empleadoRoutes);
+app.use('/api/pedidos', pedidoRoutes);
 
 // Ruta de prueba
 app.get('/', (req, res) => {

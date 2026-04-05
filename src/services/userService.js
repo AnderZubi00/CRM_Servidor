@@ -1,5 +1,7 @@
 const Usuario = require('../models/Usuario');
 const Empleado = require('../models/Empleado');
+const Cliente = require('../models/Cliente');
+const { sequelize } = require('../config/database');
 
 /**
  * Crea un nuevo usuario
@@ -63,11 +65,22 @@ const createUser = async (userData) => {
 
     // Crear el usuario (solo estos campos; no pasar userData para evitar id_rol null del body)
     const usuario = await Usuario.create(datosUsuario);
-    
+
+    // Todo usuario nuevo empieza como cliente → crear registro en tabla cliente
+    await Cliente.findOrCreate({
+      where: { correo: datosUsuario.correo },
+      defaults: {
+        nombre: datosUsuario.nombre || datosUsuario.correo.split('@')[0],
+        apellido: datosUsuario.apellido || null,
+        telefono: datosUsuario.telefono || null,
+        correo: datosUsuario.correo,
+      },
+    });
+
     // No devolver la contraseña
     const userResponse = usuario.toJSON();
     delete userResponse.contraseña;
-    
+
     return userResponse;
   } catch (error) {
     throw error;
@@ -146,26 +159,68 @@ const getUserById = async (id) => {
 };
 
 /**
- * Actualiza un usuario
+ * Actualiza un usuario y sincroniza las tablas cliente/empleado si cambia el rol.
  * @param {Number} id - ID del usuario
- * @param {Object} userData - Datos a actualizar
+ * @param {Object} userData - Datos a actualizar (puede incluir id_rol)
  * @returns {Promise<Object>} Usuario actualizado
  */
 const updateUser = async (id, userData) => {
+  const t = await sequelize.transaction();
   try {
-    const usuario = await Usuario.findByPk(id);
-    
-    if (!usuario) {
-      throw new Error('Usuario no encontrado');
+    const usuario = await Usuario.findByPk(id, { transaction: t });
+    if (!usuario) throw new Error('Usuario no encontrado');
+
+    const oldRol = Number(usuario.id_rol);
+    const newRol = userData.id_rol != null ? Number(userData.id_rol) : oldRol;
+    const rolCambia = newRol !== oldRol;
+
+    if (rolCambia) {
+      // ── A. Limpiar tabla de origen ──────────────────────────────────────
+      if (oldRol === 3) {
+        // Era cliente → eliminar de tabla cliente
+        await Cliente.destroy({ where: { correo: usuario.correo }, transaction: t });
+      } else if (oldRol === 2 && usuario.id_empleado) {
+        // Era empleado → eliminar registro de empleado y limpiar FK
+        await Empleado.destroy({ where: { id_empleado: usuario.id_empleado }, transaction: t });
+        userData.id_empleado = null;
+      }
+
+      // ── B. Crear registro en tabla destino ──────────────────────────────
+      if (newRol === 3) {
+        // Nuevo cliente → crear en tabla cliente
+        await Cliente.findOrCreate({
+          where: { correo: usuario.correo },
+          defaults: {
+            nombre: userData.nombre || usuario.nombre || usuario.correo.split('@')[0],
+            apellido: userData.apellido || usuario.apellido || null,
+            telefono: userData.telefono || usuario.telefono || null,
+            correo: usuario.correo,
+          },
+          transaction: t,
+        });
+      } else if (newRol === 2) {
+        // Nuevo empleado → crear en tabla empleado y vincular en usuario
+        const empleado = await Empleado.create({
+          nombre: userData.nombre || usuario.nombre || usuario.correo.split('@')[0],
+          apellido: userData.apellido || usuario.apellido || null,
+          telefono: userData.telefono || usuario.telefono || null,
+          dni: null,
+        }, { transaction: t });
+        userData.id_empleado = empleado.id_empleado;
+      } else if (newRol === 1) {
+        // Admin → sin tabla propia, limpiar FK de empleado si la hubiera
+        userData.id_empleado = null;
+      }
     }
 
-    await usuario.update(userData);
-    
+    await usuario.update(userData, { transaction: t });
+    await t.commit();
+
     const userResponse = usuario.toJSON();
     delete userResponse.contraseña;
-    
     return userResponse;
   } catch (error) {
+    await t.rollback();
     throw error;
   }
 };
