@@ -12,6 +12,7 @@ const Proveedor = require('./models/Proveedor');
 const Producto = require('./models/Producto');
 const Pedido = require('./models/Pedido');
 const DetallePedido = require('./models/DetallePedido');
+const Consulta = require('./models/Consulta');
 
 const PORT = process.env.PORT || 4000;
 
@@ -114,6 +115,18 @@ const startServer = async () => {
       as: 'producto'
     });
 
+    // Consulta -> Usuario
+    Consulta.belongsTo(Usuario, {
+      foreignKey: 'id_usuario',
+      targetKey: 'id_usuario',
+      as: 'usuario',
+    });
+    Usuario.hasMany(Consulta, {
+      foreignKey: 'id_usuario',
+      sourceKey: 'id_usuario',
+      as: 'consultas',
+    });
+
     // Sincronizar modelos (las tablas ya están creadas, solo verificar estructura)
     // En producción, usar migraciones en lugar de sync
     if (process.env.NODE_ENV !== 'production') {
@@ -127,6 +140,7 @@ const startServer = async () => {
       await Producto.sync({ force: false });
       await Pedido.sync({ force: false });
       await DetallePedido.sync({ force: false });
+      await Consulta.sync({ force: false });
       
       console.log('✅ Modelos sincronizados con la base de datos');
     }
