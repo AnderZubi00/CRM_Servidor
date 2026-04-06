@@ -22,7 +22,7 @@ const createPedido = async (idCliente, items) => {
   try {
     // 1. Crear cabecera del pedido
     const pedido = await Pedido.create(
-      { id_cliente: idCliente, fecha: new Date(), id_empleado: null },
+      { id_cliente: idCliente, fecha: new Date(), id_empleado: null, estado: 'pendiente' },
       { transaction: t }
     );
 

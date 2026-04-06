@@ -30,6 +30,20 @@ const ensureUsuarioColumns = async () => {
   await addIfMissing('telefono', { type: DataTypes.STRING(20), allowNull: true });
 };
 
+const ensurePedidoColumns = async () => {
+  const qi = sequelize.getQueryInterface();
+  const desc = await qi.describeTable('pedido');
+
+  if (!desc['estado']) {
+    await qi.addColumn('pedido', 'estado', {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      defaultValue: 'pendiente',
+    });
+    console.log('✅ Columna agregada: pedido.estado');
+  }
+};
+
 // Función para inicializar el servidor
 const startServer = async () => {
   try {
@@ -40,6 +54,7 @@ const startServer = async () => {
     // Asegurar columnas faltantes (solo desarrollo)
     if (process.env.NODE_ENV !== 'production') {
       await ensureUsuarioColumns();
+      await ensurePedidoColumns();
     }
 
     // Establecer relaciones

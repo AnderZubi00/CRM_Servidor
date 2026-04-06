@@ -22,6 +22,11 @@ const Pedido = sequelize.define('Pedido', {
     type: DataTypes.INTEGER,
     allowNull: true,
     field: 'id_empleado'
+  },
+  estado: {
+    type: DataTypes.STRING(20),
+    allowNull: false,
+    defaultValue: 'pendiente',
   }
 }, {
   tableName: 'pedido',
